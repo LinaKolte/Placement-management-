@@ -23,10 +23,5 @@
       "dest": "/index.html"
     }
   ],
-  "crons": [
-    {
-      "path": "/api/cron/deadline-reminders",
-      "schedule": "*/15 * * * *"
-    }
-  ]
+  
 }
