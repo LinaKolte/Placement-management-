@@ -1,38 +1,22 @@
 const express = require("express");
-const fs = require("fs");
-const path = require("path");
+const { authenticate, allowRoles } = require('../middleware/auth');
 const multer = require("multer");
 
 const router = express.Router();
 
 // Import the controller function
-const { uploadDocument } = require("../controllers/StudentController");
-
-const uploadRoot = path.join(__dirname, "..", "uploads");
-fs.mkdirSync(path.join(uploadRoot, "resumes"), { recursive: true });
-fs.mkdirSync(path.join(uploadRoot, "marksheets"), { recursive: true });
-fs.mkdirSync(path.join(uploadRoot, "idproofs"), { recursive: true });
-
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    const type = req.body.documentType;
-
-    if (type === "resume") {
-      cb(null, path.join(uploadRoot, "resumes"));
-    } else if (type === "marksheet") {
-      cb(null, path.join(uploadRoot, "marksheets"));
-    } else {
-      cb(null, path.join(uploadRoot, "idproofs"));
-    }
-  },
-
-  filename: function (req, file, cb) {
-    cb(null, Date.now() + "_" + file.originalname);
-  },
-});
+const { uploadDocument, updateProfile, getProfiles, sendProfileForVerification, getProfileVerificationStatus, getAllProfileVerifications, updateProfileVerificationStatus } = require("../controllers/StudentController");
 
 const upload = multer({
-  storage: storage,
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png'];
+    if (!allowedTypes.includes(file.mimetype)) {
+      return cb(new Error('Only PDF, JPG, and PNG files are allowed'));
+    }
+    cb(null, true);
+  },
 });
 
 router.post(
@@ -40,5 +24,12 @@ router.post(
   upload.single("document"),
   uploadDocument
 );
+router.post("/profile", updateProfile);
+router.put("/update-profile", updateProfile);
+router.get("/profiles", getProfiles);
+router.post("/profile-verification", sendProfileForVerification);
+router.get("/profile-verification/:rollNumber", getProfileVerificationStatus);
+router.get("/profile-verifications-admin", authenticate, allowRoles('admin'), getAllProfileVerifications);
+router.put("/profile-verification/:verificationId", authenticate, allowRoles('admin'), updateProfileVerificationStatus);
 
 module.exports = router;

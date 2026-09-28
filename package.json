@@ -1,0 +1,11 @@
+{
+  "name": "student-placement-portal",
+  "private": true,
+  "scripts": {
+    "frontend": "npm --prefix client run dev"
+  },
+  "dependencies": {
+    "lucide-react": "^1.43.0",
+    "recharts": "^3.10.1"
+  }
+}

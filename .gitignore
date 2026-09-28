@@ -5,8 +5,8 @@ server/node_modules/
 
 # Environment files
 .env
-client/.env
-server/.env
+.env.*
+!.env.example
 
 # Build output
 dist/
