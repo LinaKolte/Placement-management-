@@ -1,4 +1,5 @@
 const express = require("express");
+const cors = require("cors");
 const dotenv = require("dotenv");
 const path = require("path");
 
@@ -8,6 +9,15 @@ const { processDeadlineReminders } = require("./utils/deadlineReminder");
 dotenv.config({ path: path.join(__dirname, ".env") });
 
 const app = express();
+
+app.use(cors({
+  origin: [
+    "http://localhost:5173",
+    "https://placement-management-frontend-five.vercel.app"
+  ],
+  credentials: true
+}));
+
 let dbConnectionPromise;
 
 const ensureDatabaseConnection = () => {
