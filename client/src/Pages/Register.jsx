@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from "react-router-dom";
 import ThemeToggle from '../components/ThemeToggle';
 
-const API_BASE = import.meta.env.VITE_API_URL || window.location.origin;
+const API_URL = import.meta.env.VITE_API_URL || window.location.origin;
 
 async function readJsonResponse(response) {
   const body = await response.text();
@@ -672,7 +672,7 @@ export default function App() {
       client_id: clientId,
       callback: async (response) => {
         try {
-          const serverResponse = await fetch(`${API_BASE}/api/auth/google`, {
+          const serverResponse = await fetch(`${API_URL}/api/auth/google`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ credential: response.credential }),
@@ -745,7 +745,7 @@ export default function App() {
     setAdminResetBusy(true);
     try {
       const endpoint = adminResetRequested ? 'confirm' : 'request';
-      const response = await fetch(`${API_BASE}/api/auth/admin/password-reset/${endpoint}`, {
+      const response = await fetch(`${API_URL}/api/auth/admin/password-reset/${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(adminResetRequested
@@ -781,7 +781,7 @@ export default function App() {
   }
 
   try {
-    const response = await fetch(`${API_BASE}/api/auth/login`, {
+    const response = await fetch(`${API_URL}/api/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -844,7 +844,7 @@ export default function App() {
     }
 
     try {
-      const response = await fetch('/api/auth/register', {
+      const response = await fetch(`${API_URL}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

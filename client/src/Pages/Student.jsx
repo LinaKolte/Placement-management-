@@ -82,7 +82,7 @@ const T = {
   sans: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, sans-serif",
 };
 
-const API_BASE = import.meta.env.VITE_API_URL || window.location.origin;
+const API_URL = import.meta.env.VITE_API_URL || window.location.origin;
 
 function mapCompanyToDrive(company) {
   return {
@@ -607,7 +607,7 @@ function PlacementAssistant({ profile, applications, drives, expanded = false })
         return;
       }
 
-      const response = await fetch(`${API_BASE}/api/assistant/chat`, {
+      const response = await fetch(`${API_URL}/api/assistant/chat`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -1222,7 +1222,7 @@ function StudentNotificationsPage({ profile }) {
       }
 
       try {
-        const response = await fetch(`${API_BASE}/api/apply/notifications/${encodeURIComponent(profile.roll)}`);
+        const response = await fetch(`${API_URL}/api/apply/notifications/${encodeURIComponent(profile.roll)}`);
         if (!response.ok) throw new Error('Could not load notifications');
         const data = await response.json();
         if (!cancelled) setNotifications(Array.isArray(data) ? data : []);
@@ -1244,7 +1244,7 @@ function StudentNotificationsPage({ profile }) {
   async function dismissNotification(notificationId) {
     try {
       setDismissingId(notificationId);
-      const response = await fetch(`${API_BASE}/api/apply/notifications/${encodeURIComponent(notificationId)}/${encodeURIComponent(profile.roll)}`, { method: 'DELETE' });
+      const response = await fetch(`${API_URL}/api/apply/notifications/${encodeURIComponent(notificationId)}/${encodeURIComponent(profile.roll)}`, { method: 'DELETE' });
       if (!response.ok) throw new Error('Could not dismiss notification');
       setNotifications((current) => current.filter((notification) => notification._id !== notificationId));
     } catch (error) {
@@ -2083,7 +2083,7 @@ function MyProfilePage({ profile, onUpdateProfile }) {
     uploadData.append("document", file);
 
     try {
-      const uploadResponse = await fetch(`${API_BASE}/api/student/upload-document`, {
+      const uploadResponse = await fetch(`${API_URL}/api/student/upload-document`, {
         method: "POST",
         body: uploadData,
       });
@@ -2112,7 +2112,7 @@ function MyProfilePage({ profile, onUpdateProfile }) {
     uploadData.append("document", file);
 
     try {
-      const response = await fetch(`${API_BASE}/api/student/upload-document`, { method: "POST", body: uploadData });
+      const response = await fetch(`${API_URL}/api/student/upload-document`, { method: "POST", body: uploadData });
       const uploaded = await response.json();
       if (!response.ok) throw new Error(uploaded.message || "Document upload failed");
       const nextDocs = { ...profile.documents, [key]: file.name };
@@ -2144,7 +2144,7 @@ function MyProfilePage({ profile, onUpdateProfile }) {
     );
 
     try {
-      const response = await fetch(`${API_BASE}/api/student/profile-verification`, {
+      const response = await fetch(`${API_URL}/api/student/profile-verification`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -2377,7 +2377,7 @@ export default function StudentPortalApp({ initialTab = "drives" }) {
       const accountEmail = String(student.email || '').trim().toLowerCase();
       let profileMismatch = false;
       for (const search of searches) {
-        const response = await fetch(`${API_BASE}/api/student/profiles?search=${encodeURIComponent(search)}`);
+        const response = await fetch(`${API_URL}/api/student/profiles?search=${encodeURIComponent(search)}`);
         const profiles = await response.json();
         if (Array.isArray(profiles) && profiles.some((candidate) =>
           candidate.rollNumber === student.rollNumber && candidate.profileMatchesStudent === false
@@ -2478,8 +2478,8 @@ export default function StudentPortalApp({ initialTab = "drives" }) {
     async function loadPlacementData() {
       try {
         const [companiesResponse, applicationsResponse] = await Promise.all([
-          fetch(`${API_BASE}/api/companies`),
-          fetch(`${API_BASE}/api/apply`),
+          fetch(`${API_URL}/api/companies`),
+          fetch(`${API_URL}/api/apply`),
         ]);
         const companies = await companiesResponse.json();
         const savedApplications = await applicationsResponse.json();
@@ -2547,7 +2547,7 @@ export default function StudentPortalApp({ initialTab = "drives" }) {
 
     async function checkForNotifications() {
       try {
-        const response = await fetch(`${API_BASE}/api/apply/notifications/${encodeURIComponent(profile.roll)}`);
+        const response = await fetch(`${API_URL}/api/apply/notifications/${encodeURIComponent(profile.roll)}`);
         if (!response.ok) return;
         const notifications = await response.json();
         if (cancelled || !Array.isArray(notifications)) return;
@@ -2578,7 +2578,7 @@ export default function StudentPortalApp({ initialTab = "drives" }) {
   }
   async function handleApply(drive) {
     try {
-      const response = await fetch(`${API_BASE}/api/apply`, {
+      const response = await fetch(`${API_URL}/api/apply`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -2632,7 +2632,7 @@ export default function StudentPortalApp({ initialTab = "drives" }) {
       return;
     }
 
-    fetch(`${API_BASE}/api/student/update-profile`, {
+    fetch(`${API_URL}/api/student/update-profile`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

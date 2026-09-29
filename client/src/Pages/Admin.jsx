@@ -57,8 +57,8 @@ function displayCompanyName(name) {
 // }
 //
 // Point this at whichever route on your backend serves that collection.
-const API_BASE = import.meta.env.VITE_API_URL || window.location.origin;
-const APPLICATIONS_ENDPOINT = `${API_BASE}/api/apply`;
+const API_URL = import.meta.env.VITE_API_URL || window.location.origin;
+const APPLICATIONS_ENDPOINT = `${API_URL}/api/apply`;
 
 function toDateTimeLocal(value) {
   if (!value) return '';
@@ -98,14 +98,14 @@ function documentUrl(path) {
 
   const uploadsIndex = normalized.toLowerCase().lastIndexOf('/uploads/');
   if (uploadsIndex >= 0) {
-    return encodeURI(`${API_BASE}${normalized.slice(uploadsIndex)}`);
+    return encodeURI(`${API_URL}${normalized.slice(uploadsIndex)}`);
   }
 
   const relativePath = normalized.replace(/^\/+/, '');
   if (!relativePath.toLowerCase().startsWith('uploads/')) {
-    return encodeURI(`${API_BASE}/api/student/document/${encodeURIComponent(relativePath)}`);
+    return encodeURI(`${API_URL}/api/student/document/${encodeURIComponent(relativePath)}`);
   }
-  return encodeURI(`${API_BASE}/${relativePath}`);
+  return encodeURI(`${API_URL}/${relativePath}`);
 }
 
 function normalizeVerificationDocuments(documents) {
@@ -696,7 +696,7 @@ function NotifyEligibleStudentsModal({ company, branchOptions, sending, onClose,
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch(`${API_BASE}/api/student/profiles`);
+        const response = await fetch(`${API_URL}/api/student/profiles`);
         if (!response.ok) throw new Error(`Request failed with status ${response.status}`);
         const data = await response.json();
         if (cancelled) return;
@@ -1051,7 +1051,7 @@ export default function Admin() {
     async function fetchManagedCompanies() {
       setCompanyLoading(true);
       try {
-        const response = await fetch(`${API_BASE}/api/companies?includeClosed=true`);
+        const response = await fetch(`${API_URL}/api/companies?includeClosed=true`);
         if (!response.ok) throw new Error('Could not load placement drives');
         const data = await response.json();
         if (!cancelled) setManagedCompanies(Array.isArray(data) ? data : []);
@@ -1105,7 +1105,7 @@ export default function Admin() {
     };
     setCompanySaving(true);
     try {
-      const response = await fetch(editingCompanyId ? `${API_BASE}/api/companies/${editingCompanyId}` : `${API_BASE}/api/companies`, {
+      const response = await fetch(editingCompanyId ? `${API_URL}/api/companies/${editingCompanyId}` : `${API_URL}/api/companies`, {
         method: editingCompanyId ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('adminToken') || ''}` },
         body: JSON.stringify(payload),
@@ -1154,7 +1154,7 @@ export default function Admin() {
 
   async function closeCompany(company) {
     try {
-      const response = await fetch(`${API_BASE}/api/companies/${company._id}`, {
+      const response = await fetch(`${API_URL}/api/companies/${company._id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${localStorage.getItem('adminToken') || ''}` },
       });
@@ -1251,7 +1251,7 @@ export default function Admin() {
         if (studentCgpaFilter.trim()) params.set('minCgpa', studentCgpaFilter.trim());
         if (studentTwelfthFilter.trim()) params.set('minTwelfthPercentage', studentTwelfthFilter.trim());
 
-        const response = await fetch(`${API_BASE}/api/student/profile-verifications-admin?${params.toString()}`, {
+        const response = await fetch(`${API_URL}/api/student/profile-verifications-admin?${params.toString()}`, {
           headers: { Authorization: `Bearer ${localStorage.getItem('adminToken') || ''}` },
         });
         if (!response.ok) throw new Error(`Request failed with status ${response.status}`);
@@ -1292,7 +1292,7 @@ export default function Admin() {
         if (verificationBranchFilter) params.set('branch', verificationBranchFilter);
         if (verificationSearch) params.set('search', verificationSearch);
 
-        const response = await fetch(`${API_BASE}/api/student/profile-verifications-admin?${params.toString()}`, {
+        const response = await fetch(`${API_URL}/api/student/profile-verifications-admin?${params.toString()}`, {
           headers: { Authorization: `Bearer ${localStorage.getItem('adminToken') || ''}` },
         });
         if (!response.ok) throw new Error(`Request failed with status ${response.status}`);
@@ -1397,7 +1397,7 @@ export default function Admin() {
     
     setVerifyingId(verificationId);
     try {
-      const response = await fetch(`${API_BASE}/api/student/profile-verification/${verificationId}`, {
+      const response = await fetch(`${API_URL}/api/student/profile-verification/${verificationId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import DashboardShell from '../components/DashboardShell';
 
-const API_BASE = import.meta.env.VITE_API_URL || window.location.origin;
+const API_URL = import.meta.env.VITE_API_URL || window.location.origin;
 
 const colors = {
   ink: '#111111',
@@ -66,7 +66,7 @@ export default function Notifications() {
     try {
       setLoading(true);
       setError('');
-      const response = await fetch(`${API_BASE}/api/apply/notifications/${studentId}`);
+      const response = await fetch(`${API_URL}/api/apply/notifications/${studentId}`);
       if (!response.ok) throw new Error('Failed to fetch notifications');
       const data = await response.json();
       setNotifications(Array.isArray(data) ? data : []);
@@ -81,7 +81,7 @@ export default function Notifications() {
   async function dismissNotification(notificationId) {
     try {
       setDismissingId(notificationId);
-      const response = await fetch(`${API_BASE}/api/apply/notifications/${notificationId}/${studentId}`, { method: 'DELETE' });
+      const response = await fetch(`${API_URL}/api/apply/notifications/${notificationId}/${studentId}`, { method: 'DELETE' });
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || 'Failed to dismiss notification');
       setNotifications((current) => current.filter((notification) => notification._id !== notificationId));
