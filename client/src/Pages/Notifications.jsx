@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import DashboardShell from '../components/DashboardShell';
 
-const API_URL = import.meta.env.VITE_API_URL || window.location.origin;
+const API_URL = import.meta.env.DEV ? '' : import.meta.env.VITE_API_URL || window.location.origin;
 
 const colors = {
   ink: '#111111',
@@ -53,7 +53,7 @@ export default function Notifications() {
       const rawStudent = localStorage.getItem('studentUser') || localStorage.getItem('user');
       const student = rawStudent ? JSON.parse(rawStudent) : null;
       return student?.rollNumber || student?.id || '';
-    } catch (parseError) {
+    } catch {
       return '';
     }
   })();

@@ -1,27 +1,30 @@
 const mongoose = require("mongoose");
 
 const connectDB = async () => {
-    const isVercel = Boolean(process.env.VERCEL);
-    if (!process.env.MONGO_URI) {
+    const isProduction = process.env.NODE_ENV === "production" || Boolean(process.env.VERCEL);
+    const mongoUri = isProduction
+        ? process.env.MONGO_URI
+        : process.env.LOCAL_MONGO_URI || "mongodb://127.0.0.1:27017/student-placement-portal";
+    if (!mongoUri) {
         console.warn("MONGO_URI is not set. Starting server without MongoDB.");
         return false;
     }
 
     const connectionOptions = {
-        serverSelectionTimeoutMS: isVercel ? 5000 : 30000,
-        connectTimeoutMS: isVercel ? 5000 : 10000,
+        serverSelectionTimeoutMS: isProduction ? 5000 : 30000,
+        connectTimeoutMS: isProduction ? 5000 : 10000,
         socketTimeoutMS: 45000,
         retryWrites: true,
         family: 4,
     };
 
     let lastError;
-    const maxAttempts = isVercel ? 1 : 3;
+    const maxAttempts = isProduction ? 1 : 3;
 
     for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
         try {
-            await mongoose.connect(process.env.MONGO_URI, connectionOptions);
-            console.log("MongoDB Atlas Connected");
+            await mongoose.connect(mongoUri, connectionOptions);
+            console.log("MongoDB Connected");
             return true;
         } catch (error) {
             lastError = error;

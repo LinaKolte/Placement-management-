@@ -2,7 +2,8 @@
   "name": "student-placement-portal",
   "private": true,
   "scripts": {
-    "frontend": "npm --prefix client run dev"
+    "frontend": "npm --prefix client run dev",
+    "backend": "npm --prefix server run dev"
   },
   "dependencies": {
     "lucide-react": "^1.43.0",

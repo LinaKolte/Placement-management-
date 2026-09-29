@@ -82,7 +82,7 @@ const T = {
   sans: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, sans-serif",
 };
 
-const API_URL = import.meta.env.VITE_API_URL || window.location.origin;
+const API_URL = import.meta.env.DEV ? '' : import.meta.env.VITE_API_URL || window.location.origin;
 
 function mapCompanyToDrive(company) {
   return {
@@ -113,7 +113,7 @@ function getStoredStudent() {
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     return parsed && typeof parsed === 'object' ? parsed : null;
-  } catch (error) {
+  } catch {
     return null;
   }
 }
@@ -196,45 +196,6 @@ const DRIVES = [
     description: "Firmware for autonomous warehouse robots." },
 ];
 
-const INITIAL_APPLICATIONS = [
-  { id: "a1", driveId: "d3", company: "Orbital Cloud", role: "Cloud Support Engineer", package: "9.5 LPA",
-    appliedDate: "2026-09-06", stage: "Interview Scheduled", stageDate: "2026-09-16",
-    history: [
-      { stage: "Applied", date: "2026-09-06", done: true },
-      { stage: "Shortlisted", date: "2026-09-10", done: true },
-      { stage: "Interview Scheduled", date: "2026-09-16", done: true },
-      { stage: "Offer", date: null, done: false },
-    ],
-    note: "Technical interview scheduled — check email for the meeting link.",
-    personalNote: "",
-    feedback: { rating: 0, text: "" },
-    documents: { resume: "Rahul_Patil_Resume.pdf", idProof: "Aadhaar_Card.pdf", marksheet: null, offerLetter: null } },
-  { id: "a2", driveId: "d4", company: "Lumen Finserv", role: "Quant Analyst", package: "18 LPA",
-    appliedDate: "2026-09-02", stage: "Rejected", stageDate: "2026-09-09",
-    history: [
-      { stage: "Applied", date: "2026-09-02", done: true },
-      { stage: "Shortlisted", date: "2026-09-05", done: true },
-      { stage: "Interview", date: "2026-09-08", done: true },
-      { stage: "Rejected", date: "2026-09-09", done: true },
-    ],
-    note: "Not selected after the technical round. Keep an eye out for the next quant drive.",
-    personalNote: "Struggled on the probability questions — revise before the next quant interview.",
-    feedback: { rating: 3, text: "Two tough technical rounds focused on stochastic processes. Panel was fair but pace was fast." },
-    documents: { resume: "Rahul_Patil_Resume.pdf", idProof: "Aadhaar_Card.pdf", marksheet: "Sem7_Marksheet.pdf", offerLetter: null } },
-  { id: "a3", driveId: "d1", company: "Infotech Nexus", role: "Software Engineer", package: "12 LPA",
-    appliedDate: "2026-09-10", stage: "Applied", stageDate: "2026-09-10",
-    history: [
-      { stage: "Applied", date: "2026-09-10", done: true },
-      { stage: "Shortlisted", date: null, done: false },
-      { stage: "Interview", date: null, done: false },
-      { stage: "Offer", date: null, done: false },
-    ],
-    note: "Application received. Results for the online assessment are usually out in 5-7 days.",
-    personalNote: "",
-    feedback: { rating: 0, text: "" },
-    documents: { resume: "Rahul_Patil_Resume.pdf", idProof: null, marksheet: null, offerLetter: null } },
-];
-
 const DRIVE_HISTORY = [
 ];
 
@@ -295,6 +256,15 @@ const BRANCH_ALIASES = {
 function normalizeBranch(branch) {
   const value = String(branch || "").trim().toUpperCase();
   return BRANCH_ALIASES[value] || value;
+}
+function getEligibilityStudent(profile) {
+  return {
+    branch: profile.branch,
+    cgpa: profile.cgpa === "" ? Number.NaN : Number(profile.cgpa),
+    tenth: profile.tenth === "" ? Number.NaN : Number(profile.tenth),
+    twelfth: profile.twelfth === "" ? Number.NaN : Number(profile.twelfth),
+    backlogs: profile.backlogs === "" ? Number.NaN : Number(profile.backlogs),
+  };
 }
 function isEligible(drive, student) {
   return student.cgpa >= drive.minCgpa
@@ -617,7 +587,7 @@ function PlacementAssistant({ profile, applications, drives, expanded = false })
       });
       const result = await response.json();
       if (response.ok && result.answer) answer = result.answer;
-    } catch (error) {
+    } catch {
       // Keep the local placement answer when the AI service is unavailable.
     }
 
@@ -849,63 +819,6 @@ function StatCard({ label, value, icon: Icon, gradient, sublabel }) {
     </div>
   );
 }
-function ChartCard({ title, children, span }) {
-  return (
-    <div style={{ background: "#fff", border: `1px solid ${T.border}`, borderRadius: 14, padding: "16px 18px 8px", flex: span || 1, minWidth: 220, boxShadow: "0 1px 2px rgba(20,30,28,0.04)" }}>
-      <div style={{ fontSize: 12.5, fontWeight: 700, color: T.inkMuted, marginBottom: 4, display: "flex", alignItems: "center", gap: 6 }}>
-        <Sparkles size={13} color={T.accentDark} /> {title}
-      </div>
-      {children}
-    </div>
-  );
-}
-function DonutBreakdown({ data, centerLabel, centerValue }) {
-  return (
-    <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-      <div style={{ width: 108, height: 108, position: "relative", flexShrink: 0 }}>
-        <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
-            <Pie data={data} dataKey="value" nameKey="name" innerRadius={34} outerRadius={52} paddingAngle={3} stroke="none">
-              {data.map((d, i) => <Cell key={i} fill={d.color} />)}
-            </Pie>
-          </PieChart>
-        </ResponsiveContainer>
-        <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
-          <div style={{ fontSize: 18, fontWeight: 800, color: T.ink, fontFamily: T.serif }}>{centerValue}</div>
-          <div style={{ fontSize: 9.5, color: T.inkMuted, fontWeight: 600 }}>{centerLabel}</div>
-        </div>
-      </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: 6, flex: 1 }}>
-        {data.map((d) => (
-          <div key={d.name} style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 12 }}>
-            <span style={{ width: 8, height: 8, borderRadius: 3, background: d.color, flexShrink: 0 }} />
-            <span style={{ color: T.ink, fontWeight: 600, flex: 1 }}>{d.name}</span>
-            <span style={{ color: T.inkMuted, fontWeight: 700 }}>{d.value}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-function StatusBarChart({ data, height = 170 }) {
-  return (
-    <div style={{ height }}>
-      <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={data} layout="vertical" margin={{ top: 8, right: 12, left: 8, bottom: 8 }}>
-          <CartesianGrid horizontal={false} stroke={T.border} />
-          <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11, fill: T.inkMuted }} axisLine={false} tickLine={false} />
-          <YAxis type="category" dataKey="name" width={72} tick={{ fontSize: 11, fill: T.inkMuted }} axisLine={false} tickLine={false} />
-          <Tooltip cursor={{ fill: T.cream }} formatter={(value) => [value, 'Drives']} contentStyle={{ fontSize: 12, borderRadius: 8, border: `1px solid ${T.border}` }} />
-          <Bar dataKey="value" radius={[0, 6, 6, 0]}>
-            {data.map((entry, index) => (
-              <Cell key={`${entry.name}-${index}`} fill={entry.color} />
-            ))}
-          </Bar>
-        </BarChart>
-      </ResponsiveContainer>
-    </div>
-  );
-}
 function MiniBarChart({ data, color = T.accentDark, height = 140 }) {
   return (
     <div style={{ height }}>
@@ -1012,65 +925,6 @@ function CompanyProfileModal({ company, onClose }) {
 }
 
 /* Compare drives modal */
-function CompareModal({ drives, onRemove, onClose }) {
-  const rows = [
-    { label: "Role", get: (d) => d.role },
-    { label: "Package", get: (d) => d.package },
-    { label: "Location", get: (d) => d.location },
-    { label: "Type", get: (d) => d.type },
-    { label: "Min. CGPA", get: (d) => d.minCgpa.toFixed(1) },
-    { label: "Branches", get: (d) => d.branches.join(", ") },
-    { label: "Backlogs allowed", get: (d) => (d.backlogsAllowed ? "Yes" : "No") },
-    { label: "Deadline", get: (d) => fmtDate(d.deadline) },
-    { label: "Rounds", get: (d) => d.rounds.length },
-    { label: "Applicants", get: (d) => d.applicants },
-    { label: "You're eligible", get: (d) => (isEligible(d, STUDENT) ? "Yes" : "No") },
-  ];
-  return (
-    <ModalShell onClose={onClose} width={Math.min(760, 220 + drives.length * 200)}>
-      <div style={{ display: "flex", alignItems: "center", marginBottom: 16 }}>
-        <h3 style={{ fontFamily: T.serif, fontSize: 20, margin: 0, color: T.ink, display: "flex", alignItems: "center", gap: 8 }}>
-          <Scale size={18} color={T.accentDark} /> Compare drives
-        </h3>
-        <button onClick={onClose} style={{ marginLeft: "auto", background: "none", border: "none", cursor: "pointer" }}>
-          <X size={18} color={T.inkSoft} />
-        </button>
-      </div>
-      <div style={{ overflowX: "auto" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12.5 }}>
-          <thead>
-            <tr>
-              <td style={{ width: 130 }} />
-              {drives.map((d) => (
-                <td key={d.id} style={{ padding: "0 10px 12px", minWidth: 180 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <Avatar text={initials(d.company)} name={d.company} size={30} />
-                    <div style={{ fontWeight: 700, color: T.ink, fontSize: 13 }}>{d.company}</div>
-                    <button onClick={() => onRemove(d.id)} style={{ marginLeft: "auto", background: "none", border: "none", cursor: "pointer" }}>
-                      <X size={13} color={T.inkSoft} />
-                    </button>
-                  </div>
-                </td>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((r) => (
-              <tr key={r.label}>
-                <td style={{ padding: "8px 10px 8px 0", color: T.inkMuted, fontWeight: 600, borderTop: `1px solid ${T.border}` }}>{r.label}</td>
-                {drives.map((d) => (
-                  <td key={d.id} style={{ padding: "8px 10px", color: T.ink, borderTop: `1px solid ${T.border}` }}>{r.get(d)}</td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </ModalShell>
-  );
-}
-
-/* Star rating input, used for interview feedback */
 function StarRating({ value, onChange, readOnly }) {
   return (
     <div style={{ display: "flex", gap: 3 }}>
@@ -1226,7 +1080,7 @@ function StudentNotificationsPage({ profile }) {
         if (!response.ok) throw new Error('Could not load notifications');
         const data = await response.json();
         if (!cancelled) setNotifications(Array.isArray(data) ? data : []);
-      } catch (error) {
+      } catch {
         if (!cancelled) setNotifications([]);
       } finally {
         if (!cancelled) setLoading(false);
@@ -1282,247 +1136,6 @@ function StudentNotificationsPage({ profile }) {
   );
 }
 
-function PlacementDrivesPage({ drives, applications, appliedDriveIds, onApply, bookmarks, onToggleBookmark }) {
-  const [query, setQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState("All");
-  const [eligibleOnly, setEligibleOnly] = useState(false);
-  const [savedOnly, setSavedOnly] = useState(false);
-  const [sortBy, setSortBy] = useState("deadline");
-  const [expandedId, setExpandedId] = useState(null);
-  const [reminders, setReminders] = useState(new Set());
-  const [notes, setNotes] = useState({});
-  const [compareIds, setCompareIds] = useState([]);
-  const [compareOpen, setCompareOpen] = useState(false);
-  const [profileCompany, setProfileCompany] = useState(null);
-  const [selectedDriveId, setSelectedDriveId] = useState(drives.find((drive) => drive.status === "Open")?.id || drives[0]?.id || null);
-
-  function toggleReminder(id) {
-    setReminders((prev) => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
-  }
-  function toggleCompare(id) {
-    setCompareIds((prev) => {
-      if (prev.includes(id)) return prev.filter((x) => x !== id);
-      if (prev.length >= 3) return prev;
-      return [...prev, id];
-    });
-  }
-
-  const filtered = useMemo(() => {
-    let list = drives.filter((d) => {
-      const matchesQuery = d.company.toLowerCase().includes(query.toLowerCase()) || d.role.toLowerCase().includes(query.toLowerCase());
-      const matchesStatus = statusFilter === "All"
-        || d.status === statusFilter
-        || (statusFilter === "Upcoming" && d.status === "Open")
-        || (statusFilter === "Ongoing" && d.status === "Closing soon");
-      const matchesEligible = !eligibleOnly || isEligible(d, STUDENT);
-      const matchesSaved = !savedOnly || bookmarks.has(d.id);
-      return matchesQuery && matchesStatus && matchesEligible && matchesSaved;
-    });
-    list.sort((a, b) => {
-      if (sortBy === "deadline") return new Date(a.deadline) - new Date(b.deadline);
-      if (sortBy === "package") return parseFloat(b.package) - parseFloat(a.package);
-      if (sortBy === "applicants") return b.applicants - a.applicants;
-      return 0;
-    });
-    return list;
-  }, [query, statusFilter, eligibleOnly, savedOnly, sortBy, bookmarks]);
-
-  const stats = { total: drives.length, open: drives.filter((d) => d.status === "Open").length, eligible: drives.filter((d) => isEligible(d, STUDENT)).length, applied: appliedDriveIds.size };
-  const compareDrives = drives.filter((d) => compareIds.includes(d.id));
-  const selectedDrive = drives.find((drive) => drive.id === selectedDriveId) || filtered[0];
-  const selectedApplications = applications.filter((application) => application.driveId === selectedDrive?.id);
-  const selectedFunnel = {
-    applied: selectedApplications.length,
-    shortlisted: selectedApplications.filter((application) => ["Shortlisted", "Interview Scheduled", "Selected", "Offer"].includes(application.stage)).length,
-    interview: selectedApplications.filter((application) => application.stage.includes("Interview") || application.history?.some((step) => step.stage.includes("Interview") && step.done)).length,
-    selected: selectedApplications.filter((application) => ["Selected", "Offer"].includes(application.stage)).length,
-    placed: selectedApplications.filter((application) => ["Placed", "Offer"].includes(application.stage)).length,
-  };
-
-  return (
-    <div style={{ paddingBottom: compareIds.length ? 70 : 0 }}>
-      <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 16, flexWrap: "wrap", padding: "24px 32px 18px", borderBottom: `1px solid ${T.border}`, background: "linear-gradient(135deg, rgba(15,118,110,.04), rgba(255,255,255,.24))" }}>
-        <div><h1 style={{ margin: 0, color: T.ink, fontFamily: T.serif, fontSize: 27 }}>Placement Drives</h1><p style={{ margin: "6px 0 0", color: T.inkMuted, fontSize: 13 }}>Track every drive from application to offer</p></div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, width: "min(320px, 100%)", border: `1px solid ${T.border}`, borderRadius: 8, padding: "8px 12px", background: "#fff" }}><Search size={15} color={T.inkSoft} /><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search by company or role..." style={{ border: 0, outline: 0, width: "100%", minWidth: 0, color: T.ink, background: "transparent", fontSize: 13.5 }} /></div>
-      </div>
-
-      <div style={{ padding: "22px 32px" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: 12, marginBottom: 18 }}>
-          {[[stats.total, "Total Drives"], [drives.filter((drive) => ["Open", "Upcoming"].includes(drive.status)).length, "Upcoming"], [drives.filter((drive) => drive.status === "Closing soon").length, "Ongoing"], [drives.reduce((sum, drive) => sum + (drive.applicants || 0), 0).toLocaleString(), "Total Applicants"]].map(([value, label], index) => <div key={label} style={{ background: "#fff", border: `1px solid ${T.border}`, borderTop: `4px solid ${index === 1 ? "#d9a640" : T.accent}`, borderRadius: 14, padding: "16px 18px", boxShadow: "0 10px 22px rgba(15,118,110,.04)" }}><div style={{ width: 32, height: 32, display: "grid", placeItems: "center", borderRadius: 9, background: index === 1 ? "#d9a640" : T.accent, color: "#fff", fontSize: 15, fontWeight: 800 }}><Briefcase size={16} /></div><strong style={{ display: "block", marginTop: 12, color: T.ink, fontFamily: T.serif, fontSize: 25 }}>{value}</strong><span style={{ display: "block", marginTop: 5, color: T.inkMuted, fontSize: 12.5 }}>{label}</span></div>)}
-        </div>
-        <div style={{ background: "#fff", border: `1px solid ${T.border}`, borderRadius: 14, padding: 12, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 18 }}>
-          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} style={selectStyle}>
-            {["All", "Upcoming", "Ongoing", "Closed"].map((s) => <option key={s}>{s}</option>)}
-          </select>
-          <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} style={selectStyle}>
-            <option value="deadline">Sort: Deadline soonest</option>
-            <option value="package">Sort: Highest package</option>
-            <option value="applicants">Sort: Most applicants</option>
-          </select>
-          <button onClick={() => setEligibleOnly((v) => !v)} style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 12px", borderRadius: 8, border: `1px solid ${eligibleOnly ? T.accentDark : T.border}`, background: eligibleOnly ? "#eef7f4" : "#fff", color: eligibleOnly ? T.accentDark : T.inkMuted, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
-            <SlidersHorizontal size={13} /> Eligible only
-          </button>
-          <button onClick={() => setSavedOnly((v) => !v)} style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 12px", borderRadius: 8, border: `1px solid ${savedOnly ? T.accent : T.border}`, background: savedOnly ? T.accentSoft : "#fff", color: savedOnly ? T.accentDark : T.inkMuted, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
-            <Star size={13} fill={savedOnly ? T.accentDark : "none"} /> Saved ({bookmarks.size})
-          </button>
-        </div>
-
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}><strong style={{ color: T.ink, fontSize: 14 }}>{filtered.length} opportunities</strong><span style={{ color: T.inkMuted, fontSize: 12 }}>Select a drive to view details</span></div>
-        <div style={{ display: "grid", gridTemplateColumns: selectedDrive ? "minmax(0, 1fr) minmax(min(320px, 100%), 1.3fr)" : "1fr", gap: 20, alignItems: "start" }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          {filtered.length === 0 && <EmptyState text="No drives match your filters. Try clearing search or filters." />}
-
-          {filtered.map((d) => {
-            const eligible = isEligible(d, STUDENT);
-            const applied = appliedDriveIds.has(d.id);
-            const expanded = expandedId === d.id;
-            const statusStyle = DRIVE_STATUS_STYLE[d.status] || { bg: "#eee", fg: "#555" };
-            const dLeft = daysUntil(d.deadline);
-            const isOpenForApps = d.status === "Open" || d.status === "Upcoming" || d.status === "Closing soon";
-
-            return (
-              <div key={d.id} style={{ background: "#fff", border: `1px solid ${compareIds.includes(d.id) ? T.accentDark : T.border}`, borderRadius: 14, overflow: "hidden", boxShadow: "0 1px 3px rgba(20,30,28,0.05)" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "16px 18px", cursor: "pointer" }} onClick={() => { setSelectedDriveId(d.id); setExpandedId(expanded ? null : d.id); }}>
-                  <Avatar text={initials(d.company)} name={d.company} size={44} />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); setProfileCompany(d.company); }}
-                        style={{ background: "none", border: "none", padding: 0, cursor: "pointer", fontWeight: 700, fontSize: 14.5, color: T.ink, textDecoration: "underline", textDecorationColor: T.border, textUnderlineOffset: 3 }}
-                      >
-                        {d.company}
-                      </button>
-                      <Pill bg={statusStyle.bg} fg={statusStyle.fg}>{d.status}</Pill>
-                      {eligible ? <Pill bg="#e5f5f0" fg="#0c7d69"><CheckCircle2 size={11} /> Eligible</Pill> : <Pill bg="#fbeaea" fg="#a53737"><XCircle size={11} /> Not eligible</Pill>}
-                      {applied && <Pill bg={T.accentSoft} fg={T.accentDark}>Applied</Pill>}
-                    </div>
-                    <div style={{ fontSize: 13, color: T.inkMuted, marginTop: 3 }}>{d.role} · {d.type} · {d.package}</div>
-                  </div>
-
-                  <div style={{ textAlign: "right", fontSize: 12.5, color: T.inkMuted, flexShrink: 0 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 5, justifyContent: "flex-end" }}><Calendar size={12} /> {fmtDate(d.driveDate)}</div>
-                    <div style={{ marginTop: 3, color: dLeft <= 3 && dLeft >= 0 ? "#a53737" : T.inkMuted, fontWeight: dLeft <= 3 && dLeft >= 0 ? 700 : 400 }}>
-                      {d.status === "Closed" || d.status === "Results Declared" ? "Applications closed" : dLeft >= 0 ? `Closes ${fmtDateTime(d.deadline)} · ${dLeft}d left` : "Closing time passed"}
-                    </div>
-                  </div>
-
-                  <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
-                    <IconBtn icon={Star} active={bookmarks.has(d.id)} activeColor={T.accentDark} onClick={() => onToggleBookmark(d.id)} title="Save drive" />
-                    {isOpenForApps && (
-                      <IconBtn icon={BellRing} active={reminders.has(d.id)} activeColor={T.accentDark} onClick={() => toggleReminder(d.id)} title="Remind me before deadline" />
-                    )}
-                      <IconBtn icon={Scale} active={compareIds.includes(d.id)} activeColor={T.accentDark} onClick={() => toggleCompare(d.id)} title="Add to compare" />
-                  </div>
-
-                  {expanded ? <ChevronUp size={16} color={T.inkSoft} /> : <ChevronDown size={16} color={T.inkSoft} />}
-                </div>
-
-                {expanded && (
-                  <div style={{ borderTop: `1px solid ${T.border}`, padding: "16px 18px", background: T.cream }}>
-                    <p style={{ fontSize: 13.5, color: T.ink, margin: "0 0 14px", lineHeight: 1.6 }}>{d.description}</p>
-
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 14, marginBottom: 14 }}>
-                      <DetailItem icon={MapPin} label="Location" value={d.location} />
-                      <DetailItem icon={GraduationCap} label="Min. CGPA" value={d.minCgpa.toFixed(1)} />
-                      <DetailItem icon={Users} label="Applicants" value={d.applicants} />
-                      <DetailItem icon={Building2} label="Branches" value={d.branches.join(", ")} />
-                    </div>
-
-                    <div style={{ marginBottom: 14 }}>
-                      <div style={{ fontSize: 12, fontWeight: 700, color: T.inkMuted, marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.04em" }}>Selection rounds</div>
-                      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                        {d.rounds.map((r, i) => (
-                          <span key={r} style={{ fontSize: 12.5, padding: "5px 10px", borderRadius: 8, background: "#fff", border: `1px solid ${T.border}`, color: T.ink }}>{i + 1}. {r}</span>
-                        ))}
-                      </div>
-                    </div>
-
-                    {!eligible && (
-                      <div style={{ display: "flex", gap: 8, alignItems: "flex-start", background: "#fbeaea", border: "1px solid #f3caca", borderRadius: 8, padding: "10px 12px", marginBottom: 14, fontSize: 12.5, color: "#7a2b2b" }}>
-                        <AlertCircle size={14} style={{ marginTop: 1, flexShrink: 0 }} />
-                        <span>{eligibilityReasons(d, STUDENT).join(" · ")}</span>
-                      </div>
-                    )}
-
-                    <div style={{ marginBottom: 14 }}>
-                      <div style={{ fontSize: 12, fontWeight: 700, color: T.inkMuted, marginBottom: 6, display: "flex", alignItems: "center", gap: 5, textTransform: "uppercase", letterSpacing: "0.04em" }}>
-                        <StickyNote size={12} /> Your private notes
-                      </div>
-                      <textarea
-                        value={notes[d.id] || ""}
-                        onChange={(e) => setNotes((prev) => ({ ...prev, [d.id]: e.target.value }))}
-                        placeholder="e.g. Ask senior about interview pattern, prep DBMS before this one..."
-                        rows={2}
-                        style={inputStyle}
-                      />
-                    </div>
-
-                    <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                      <button
-                        disabled={!eligible || applied || !isOpenForApps}
-                        onClick={(e) => { e.stopPropagation(); onApply(d); }}
-                        style={{ padding: "9px 18px", borderRadius: 8, border: "none", fontSize: 13.5, fontWeight: 700, cursor: !eligible || applied || !isOpenForApps ? "not-allowed" : "pointer", background: applied ? T.accentSoft : !eligible || !isOpenForApps ? "#eef3f3" : T.accentDark, color: applied ? T.accentDark : !eligible || !isOpenForApps ? T.inkSoft : "#fff" }}
-                      >
-                        {applied ? "Application submitted" : !isOpenForApps ? "Applications closed" : !eligible ? "Not eligible" : "Apply now"}
-                      </button>
-                      <button onClick={(e) => { e.stopPropagation(); downloadICS(d); }} style={{ display: "flex", alignItems: "center", gap: 6, padding: "9px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: "#fff", color: T.ink, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
-                        <CalendarPlus size={14} /> Add to calendar
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-          </div>
-
-          {selectedDrive && (
-            <div style={{ background: "#fff", border: `1px solid ${T.border}`, borderTop: `4px solid ${T.accent}`, borderRadius: 14, padding: "20px", boxShadow: "0 10px 24px rgba(15,118,110,.06)", position: "sticky", top: 18 }}>
-              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
-                <div>
-                  <h2 style={{ margin: 0, color: T.ink, fontFamily: T.serif, fontSize: 21 }}>{selectedDrive.company} - {selectedDrive.role}</h2>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginTop: 8, color: T.inkMuted, fontSize: 12 }}><span><Calendar size={12} style={{ display: "inline", marginRight: 4 }} />{fmtDate(selectedDrive.driveDate)}</span><span><MapPin size={12} style={{ display: "inline", marginRight: 4 }} />{selectedDrive.location || "Campus"}</span><span><Users size={12} style={{ display: "inline", marginRight: 4 }} />{(selectedDrive.branches || []).join(", ") || "All branches"}</span></div>
-                </div>
-                <Pill bg={(DRIVE_STATUS_STYLE[selectedDrive.status] || {}).bg || T.accentSoft} fg={(DRIVE_STATUS_STYLE[selectedDrive.status] || {}).fg || T.accentDark}>{selectedDrive.status}</Pill>
-              </div>
-              <div style={{ marginTop: 14, color: "#b77900", fontFamily: T.serif, fontSize: 20, fontWeight: 700 }}>{selectedDrive.package}</div>
-              <div style={{ marginTop: 22 }}><div style={{ marginBottom: 10, color: T.inkMuted, fontSize: 11, fontWeight: 800, letterSpacing: ".08em", textTransform: "uppercase" }}>Application funnel</div><div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 9 }}>{[["Applications", selectedFunnel.applied || selectedDrive.applicants || 0], ["Shortlisted", selectedFunnel.shortlisted], ["Interview", selectedFunnel.interview], ["Selected", selectedFunnel.selected], ["Placed", selectedFunnel.placed]].map(([label, value], index) => <div key={label} style={{ background: T.cream, borderRadius: 10, padding: "11px 12px" }}><div style={{ color: T.inkMuted, fontSize: 11 }}>{label}</div><strong style={{ display: "block", marginTop: 4, color: T.ink, fontFamily: T.serif, fontSize: 20 }}>{value}</strong><span style={{ color: T.accentDark, fontSize: 10.5, fontWeight: 700 }}>{index === 0 ? "Base stage" : `${selectedFunnel.applied ? Math.round((value / selectedFunnel.applied) * 100) : 0}%`}</span></div>)}</div></div>
-              <div style={{ marginTop: 22 }}><div style={{ marginBottom: 10, color: T.inkMuted, fontSize: 11, fontWeight: 800, letterSpacing: ".08em", textTransform: "uppercase" }}>Selection rounds</div><div style={{ display: "grid", gap: 10 }}>{(selectedDrive.rounds || []).map((round, index) => <div key={round} style={{ display: "flex", alignItems: "center", gap: 10 }}><span style={{ width: 28, height: 28, display: "grid", placeItems: "center", border: `2px solid ${T.border}`, borderRadius: "50%", color: T.accentDark, fontSize: 12, fontWeight: 800 }}>{index + 1}</span><div><strong style={{ display: "block", color: T.ink, fontSize: 13 }}>{round}</strong><span style={{ color: T.inkMuted, fontSize: 11 }}>{index === 0 ? "Upcoming" : "Pending"}</span></div></div>)}</div></div>
-              <div style={{ display: "flex", gap: 9, marginTop: 22 }}><button type="button" disabled={appliedDriveIds.has(selectedDrive.id) || !isEligible(selectedDrive, STUDENT) || !["Open", "Upcoming", "Closing soon"].includes(selectedDrive.status)} onClick={() => onApply(selectedDrive)} style={{ flex: 1, border: 0, borderRadius: 8, padding: "10px 12px", background: appliedDriveIds.has(selectedDrive.id) ? T.accentSoft : T.accentDark, color: appliedDriveIds.has(selectedDrive.id) ? T.accentDark : "#fff", fontSize: 13, fontWeight: 700 }}>{appliedDriveIds.has(selectedDrive.id) ? "Application submitted" : "Apply now"}</button><button type="button" onClick={() => setExpandedId(selectedDrive.id)} style={{ border: `1px solid ${T.border}`, borderRadius: 8, padding: "10px 12px", background: "#fff", color: T.ink, fontSize: 13, fontWeight: 700 }}>View details</button></div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {compareIds.length > 0 && (
-        <div style={{ position: "fixed", bottom: 0, left: 240, right: 0, background: "#fff", borderTop: `1px solid ${T.border}`, padding: "12px 32px", display: "flex", alignItems: "center", gap: 12, boxShadow: "0 -4px 14px rgba(20,30,28,0.06)", zIndex: 40 }}>
-          <Scale size={16} color={T.accentDark} />
-          <span style={{ fontSize: 13, fontWeight: 600, color: T.ink }}>{compareIds.length} drive{compareIds.length > 1 ? "s" : ""} selected to compare</span>
-          <div style={{ flex: 1 }} />
-          <button onClick={() => setCompareIds([])} style={{ padding: "7px 12px", borderRadius: 8, border: `1px solid ${T.border}`, background: "#fff", color: T.inkMuted, fontSize: 12.5, fontWeight: 600, cursor: "pointer" }}>Clear</button>
-          <button
-            disabled={compareIds.length < 2}
-            onClick={() => setCompareOpen(true)}
-            style={{ padding: "7px 16px", borderRadius: 8, border: "none", background: compareIds.length < 2 ? "#efece3" : T.accentDark, color: compareIds.length < 2 ? T.inkSoft : "#fff", fontSize: 12.5, fontWeight: 700, cursor: compareIds.length < 2 ? "not-allowed" : "pointer" }}
-          >
-            Compare
-          </button>
-        </div>
-      )}
-
-      {compareOpen && <CompareModal drives={compareDrives} onRemove={(id) => setCompareIds((p) => p.filter((x) => x !== id))} onClose={() => setCompareOpen(false)} />}
-      {profileCompany && <CompanyProfileModal company={profileCompany} onClose={() => setProfileCompany(null)} />}
-    </div>
-  );
-}
-
-/* =========================================================================
-   PLACEMENT DRIVE HISTORY PAGE
-   ========================================================================= */
 const MOCK_STUDENT_HISTORY = [
   { id: "mock-amazon", company: "Amazon", role: "SDE-1", package: "₹28.0 LPA", appliedDate: "2026-08-14", stage: "Offer", history: [{ stage: "Applied", done: true }, { stage: "Shortlisted", done: true }, { stage: "Technical Interview", done: true }, { stage: "Offer", done: true }] },
   { id: "mock-zoho", company: "Zoho", role: "Member of Technical Staff", package: "₹12.0 LPA", appliedDate: "2026-08-02", stage: "Interview Scheduled", history: [{ stage: "Applied", done: true }, { stage: "Shortlisted", done: true }, { stage: "Technical Interview", done: true }, { stage: "Final HR Round", done: false }] },
@@ -1568,163 +1181,6 @@ function StudentDriveHistoryCards({ applications }) {
   </div>;
 }
 
-function PlacementDriveHistoryPage() {
-  const [query, setQuery] = useState("");
-  const [yearFilter, setYearFilter] = useState("All");
-  const [outcomeFilter, setOutcomeFilter] = useState("All");
-  const [participationFilter, setParticipationFilter] = useState("All");
-  const [sortBy, setSortBy] = useState("recent");
-  const [expandedId, setExpandedId] = useState(null);
-  const [profileCompany, setProfileCompany] = useState(null);
-
-  const years = useMemo(() => ["All", ...Array.from(new Set(DRIVE_HISTORY.map((h) => h.year))).sort((a, b) => b - a)], []);
-  const outcomes = ["All", "Selected", "Not selected", "In progress", "Did not apply", "Not eligible"];
-
-  const filtered = useMemo(() => {
-    let list = DRIVE_HISTORY.filter((h) => {
-      const matchesQuery = h.company.toLowerCase().includes(query.toLowerCase()) || h.role.toLowerCase().includes(query.toLowerCase());
-      const matchesYear = yearFilter === "All" || h.year === Number(yearFilter);
-      const matchesOutcome = outcomeFilter === "All" || h.outcome === outcomeFilter;
-      const matchesParticipation = participationFilter === "All" || (participationFilter === "Participated" && h.participated) || (participationFilter === "Not participated" && !h.participated);
-      return matchesQuery && matchesYear && matchesOutcome && matchesParticipation;
-    });
-    list.sort((a, b) => {
-      if (sortBy === "recent") return new Date(b.driveDate) - new Date(a.driveDate);
-      if (sortBy === "oldest") return new Date(a.driveDate) - new Date(b.driveDate);
-      if (sortBy === "package") return parseFloat(b.package) - parseFloat(a.package);
-      return 0;
-    });
-    return list;
-  }, [query, yearFilter, outcomeFilter, participationFilter, sortBy]);
-
-  const stats = {
-    total: DRIVE_HISTORY.length,
-    participated: DRIVE_HISTORY.filter((h) => h.participated).length,
-    selected: DRIVE_HISTORY.filter((h) => h.outcome === "Selected").length,
-    successRate: (() => {
-      const p = DRIVE_HISTORY.filter((h) => h.participated).length;
-      const s = DRIVE_HISTORY.filter((h) => h.outcome === "Selected").length;
-      return p ? Math.round((s / p) * 100) : 0;
-    })(),
-  };
-
-  return (
-    <div>
-      <PageHeader eyebrow="Past drives" title="Placement drive history" />
-
-      <div style={{ padding: "22px 32px" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1.3fr) minmax(260px, .9fr)", gap: 14, marginBottom: 18 }}>
-          <div style={{ background: "#fff", border: `1px solid ${T.border}`, borderRadius: 18, padding: "20px 22px", boxShadow: "0 12px 26px rgba(15,118,110,.05)" }}><div style={{ display: "flex", alignItems: "center", gap: 8, color: T.accentDark, fontSize: 11, fontWeight: 800, letterSpacing: ".08em", textTransform: "uppercase" }}><Clock size={14} /> Your placement journey</div><h2 style={{ margin: "10px 0 6px", color: T.ink, fontSize: 23 }}>Learn from every drive</h2><p style={{ margin: 0, color: T.inkMuted, fontSize: 13, lineHeight: 1.5 }}>Review what worked, compare outcomes, and use past hiring patterns to prepare for the next opportunity.</p><div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 9, marginTop: 18 }}>{[[stats.total, "Concluded"], [stats.participated, "Participated"], [stats.selected, "Offers"], [`${stats.successRate}%`, "Success rate"]].map(([value, label]) => <div key={label} style={{ background: T.cream, borderRadius: 10, padding: "10px 8px" }}><strong style={{ display: "block", color: T.accentDark, fontSize: 18 }}>{value}</strong><span style={{ color: T.inkMuted, fontSize: 10.5 }}>{label}</span></div>)}</div></div>
-          <div style={{ background: `linear-gradient(135deg, ${T.accentDark}, ${T.accent})`, borderRadius: 18, padding: "20px 22px", color: "#fff" }}><div style={{ fontSize: 11, fontWeight: 800, letterSpacing: ".08em", textTransform: "uppercase", opacity: .8 }}>Outcome snapshot</div><div style={{ display: "grid", gap: 11, marginTop: 16 }}>{[["Selected", stats.selected, T.accentSoft], ["In progress", DRIVE_HISTORY.filter((h) => h.outcome === "In progress").length, "#b9f2e9"], ["Not selected", DRIVE_HISTORY.filter((h) => h.outcome === "Not selected").length, "#f7cbd1"]].map(([label, value, color]) => <div key={label}><div style={{ display: "flex", justifyContent: "space-between", fontSize: 11.5, marginBottom: 5 }}><span>{label}</span><strong>{value}</strong></div><div style={{ height: 6, borderRadius: 999, background: "rgba(255,255,255,.18)" }}><div style={{ width: `${stats.total ? Math.max(8, (value / stats.total) * 100) : 0}%`, height: "100%", borderRadius: 999, background: color }} /></div></div>)}</div></div>
-        </div>
-
-        <div style={{ background: "#fff", border: `1px solid ${T.border}`, borderRadius: 14, padding: 12, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 18 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, border: `1px solid ${T.border}`, borderRadius: 8, padding: "8px 12px", flex: "1 1 220px", background: "#fff" }}>
-            <Search size={15} color={T.inkSoft} />
-            <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search by company or role" style={{ border: "none", outline: "none", fontSize: 13.5, width: "100%", color: T.ink, background: "transparent" }} />
-          </div>
-          <select value={yearFilter} onChange={(e) => setYearFilter(e.target.value)} style={selectStyle}>
-            {years.map((y) => <option key={y} value={y}>{y === "All" ? "All years" : y}</option>)}
-          </select>
-          <select value={outcomeFilter} onChange={(e) => setOutcomeFilter(e.target.value)} style={selectStyle}>
-            {outcomes.map((o) => <option key={o}>{o}</option>)}
-          </select>
-          <select value={participationFilter} onChange={(e) => setParticipationFilter(e.target.value)} style={selectStyle}>
-            {["All", "Participated", "Not participated"].map((p) => <option key={p}>{p}</option>)}
-          </select>
-          <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} style={selectStyle}>
-            <option value="recent">Sort: Most recent</option>
-            <option value="oldest">Sort: Oldest first</option>
-            <option value="package">Sort: Highest package</option>
-          </select>
-        </div>
-
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}><strong style={{ color: T.ink, fontSize: 14 }}>{filtered.length} past drives</strong><span style={{ color: T.inkMuted, fontSize: 12 }}>Expand a record to see round details</span></div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          {filtered.length === 0 && <EmptyState text="No past drives match your filters." />}
-
-          {filtered.map((h) => {
-            const expanded = expandedId === h.id;
-            const outcomeStyle = OUTCOME_STYLE[h.outcome] || { bg: "#eee", fg: "#555" };
-
-            return (
-              <div key={h.id} style={{ background: "#fff", border: `1px solid ${T.border}`, borderRadius: 14, overflow: "hidden", boxShadow: "0 1px 3px rgba(20,30,28,0.05)" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 14, padding: "16px 18px", cursor: "pointer" }} onClick={() => setExpandedId(expanded ? null : h.id)}>
-                  <Avatar text={initials(h.company)} name={h.company} size={44} />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                      <button onClick={(e) => { e.stopPropagation(); setProfileCompany(h.company); }} style={{ background: "none", border: "none", padding: 0, cursor: "pointer", fontWeight: 700, fontSize: 14.5, color: T.ink, textDecoration: "underline", textDecorationColor: T.border, textUnderlineOffset: 3 }}>
-                        {h.company}
-                      </button>
-                      <Pill bg={outcomeStyle.bg} fg={outcomeStyle.fg}>{h.outcome}</Pill>
-                      {!h.participated && <Pill bg="#f0efe9" fg="#726f68">Not participated</Pill>}
-                    </div>
-                    <div style={{ fontSize: 13, color: T.inkMuted, marginTop: 3 }}>{h.role} · {h.type} · {h.package}</div>
-                  </div>
-                  <div style={{ textAlign: "right", fontSize: 12.5, color: T.inkMuted, flexShrink: 0 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 5, justifyContent: "flex-end" }}><Calendar size={12} /> {fmtDate(h.driveDate)}</div>
-                    <div style={{ marginTop: 3 }}>{h.totalSelected} selected of {h.totalApplicants}</div>
-                  </div>
-                  {expanded ? <ChevronUp size={16} color={T.inkSoft} /> : <ChevronDown size={16} color={T.inkSoft} />}
-                </div>
-
-                {expanded && (
-                  <div style={{ borderTop: `1px solid ${T.border}`, padding: "16px 18px", background: T.cream }}>
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 14, marginBottom: 14 }}>
-                      <DetailItem icon={Building2} label="Branches invited" value={h.branches.join(", ")} />
-                      <DetailItem icon={Users} label="Total applicants" value={h.totalApplicants} />
-                      <DetailItem icon={CheckCircle2} label="Total selected" value={h.totalSelected} />
-                      <DetailItem icon={GraduationCap} label="Your rounds cleared" value={h.participated ? `${h.roundsCleared} of ${h.totalRounds}` : "—"} />
-                    </div>
-
-                    {h.participated && (
-                      <div style={{ display: "flex", alignItems: "center", marginBottom: 16 }}>
-                        {Array.from({ length: h.totalRounds }).map((_, i) => (
-                          <React.Fragment key={i}>
-                            <div style={{ width: 22, height: 22, borderRadius: "50%", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", background: i < h.roundsCleared ? T.accentDark : "#fff", border: `2px solid ${i < h.roundsCleared ? T.accentDark : T.border}` }}>
-                              {i < h.roundsCleared && <CheckCircle2 size={12} color="#fff" />}
-                            </div>
-                            {i < h.totalRounds - 1 && <div style={{ flex: 1, height: 2, background: i < h.roundsCleared - 1 ? T.accentDark : T.border }} />}
-                          </React.Fragment>
-                        ))}
-                      </div>
-                    )}
-
-                    {h.participated && h.rounds && h.rounds.length > 0 && (
-                      <div style={{ marginBottom: 14 }}>
-                        <div style={{ fontSize: 12, fontWeight: 700, color: T.inkMuted, marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.04em" }}>Round-by-round result</div>
-                        <RoundStatusList rounds={deriveRoundStatuses(h)} />
-                      </div>
-                    )}
-
-                    {!h.participated && (
-                      <div style={{ display: "flex", gap: 8, alignItems: "flex-start", background: "#f0efe9", border: `1px solid ${T.border}`, borderRadius: 8, padding: "10px 12px", marginBottom: 14, fontSize: 12.5, color: T.inkMuted }}>
-                        <AlertCircle size={14} style={{ marginTop: 1, flexShrink: 0 }} />
-                        <span>You didn't attend this drive — {h.outcome === "Not eligible" ? "you weren't eligible for it." : "no application was submitted."}</span>
-                      </div>
-                    )}
-
-                    {h.outcome === "Selected" && (
-                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 14, background: "#e5f5f0", border: "1px solid #b9e3d4", borderRadius: 8, padding: "10px 12px", fontSize: 13, color: "#0c7d69", fontWeight: 600 }}>
-                        <CheckCircle2 size={15} /> Offer accepted — {h.offerPackage}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {profileCompany && <CompanyProfileModal company={profileCompany} onClose={() => setProfileCompany(null)} />}
-    </div>
-  );
-}
-
-/* =========================================================================
-   MY APPLICATIONS PAGE
-   ========================================================================= */
 function MyApplicationsPage({ applications, onWithdraw, onBulkWithdraw, onUpdateApplication, onNavigate }) {
   const [query, setQuery] = useState("");
   const [stageFilter, setStageFilter] = useState("All");
@@ -2610,13 +2066,26 @@ export default function StudentPortalApp({ initialTab = "drives" }) {
       showToast(error.message || "Application could not be submitted");
     }
   }
-  function handleWithdraw(appId) {
-    setApplications((prev) => prev.map((a) => (a.id === appId ? { ...a, stage: "Withdrawn", stageDate: "2026-09-12" } : a)));
-    showToast("Application withdrawn");
+  async function handleWithdraw(appId, quiet = false) {
+    try {
+      const response = await fetch(`${API_URL}/api/apply/${encodeURIComponent(appId)}/withdraw`, { method: "PUT" });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.message || "Application could not be withdrawn");
+      const stageDate = result.application?.updatedAt?.slice(0, 10) || new Date().toISOString().slice(0, 10);
+      setApplications((current) => current.map((application) => (
+        application.id === appId ? { ...application, stage: "Withdrawn", stageDate } : application
+      )));
+      if (!quiet) showToast("Application withdrawn");
+      return true;
+    } catch (error) {
+      if (!quiet) showToast(error.message || "Application could not be withdrawn");
+      return false;
+    }
   }
-  function handleBulkWithdraw(ids) {
-    setApplications((prev) => prev.map((a) => (ids.includes(a.id) ? { ...a, stage: "Withdrawn", stageDate: "2026-09-12" } : a)));
-    showToast(`${ids.length} applications withdrawn`);
+  async function handleBulkWithdraw(ids) {
+    const results = await Promise.all(ids.map((id) => handleWithdraw(id, true)));
+    const failedCount = results.filter((succeeded) => !succeeded).length;
+    showToast(failedCount ? `${ids.length - failedCount} withdrawn; ${failedCount} could not be withdrawn` : `${ids.length} applications withdrawn`);
   }
   function handleUpdateApplication(appId, patch) {
     setApplications((prev) => prev.map((a) => (a.id === appId ? { ...a, ...patch } : a)));

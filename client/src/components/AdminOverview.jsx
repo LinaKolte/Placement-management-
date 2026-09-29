@@ -1,4 +1,4 @@
-import { Building2, FileText, Plus, Search, Star, Users } from 'lucide-react';
+import { Building2, FileText, Plus, Star, Users } from 'lucide-react';
 import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import './AdminOverview.css';
 
@@ -42,7 +42,7 @@ function Panel({ title, sub, children, className = '' }) {
   );
 }
 
-export default function AdminOverview({ admin, totalStudentCount, activeCompanyCount, totalApplications, shortlistedCount, selectedCount, placedCount, applications, managedCompanies, students, onNavigate }) {
+export default function AdminOverview({ admin, totalStudentCount, activeCompanyCount, totalApplications, placedCount, applications, managedCompanies, students, onNavigate }) {
   const recentApplications = applications.slice(0, 5);
   const trend = [
     { month: 'Jun', offers: Math.max(0, Math.round(placedCount * 0.15)) },

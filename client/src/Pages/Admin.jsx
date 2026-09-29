@@ -57,7 +57,7 @@ function displayCompanyName(name) {
 // }
 //
 // Point this at whichever route on your backend serves that collection.
-const API_URL = import.meta.env.VITE_API_URL || window.location.origin;
+const API_URL = import.meta.env.DEV ? '' : import.meta.env.VITE_API_URL || window.location.origin;
 const APPLICATIONS_ENDPOINT = `${API_URL}/api/apply`;
 
 function toDateTimeLocal(value) {
@@ -222,7 +222,6 @@ const styles = {
     marginRight: 0,
     fontFamily: fonts.body,
     color: colors.ink,
-    background: colors.paper,
     boxSizing: 'border-box',
     display: 'flex',
     flexDirection: 'column',
@@ -571,7 +570,6 @@ const placementChartPalette = ['#0f766e', '#16a34a', '#d97706', '#dc2626', '#089
 function PlacementPieChart({ parts, total, size = 220 }) {
   const center = size / 2;
   const radius = size / 2 - 10;
-  let angle = -90;
   const point = (degrees) => {
     const radians = degrees * Math.PI / 180;
     return [center + radius * Math.cos(radians), center + radius * Math.sin(radians)];
@@ -579,11 +577,11 @@ function PlacementPieChart({ parts, total, size = 220 }) {
 
   return (
     <svg viewBox={`0 0 ${size} ${size}`} width={size} height={size} role="img" aria-label="Branch-wise student distribution">
-      {parts.map((part) => {
+      {parts.map((part, index) => {
         const fraction = part.value / total;
-        const start = angle;
+        const precedingValue = parts.slice(0, index).reduce((sum, item) => sum + item.value, 0);
+        const start = -90 + (precedingValue / total) * 360;
         const end = start + fraction * 360;
-        angle = end;
         const [startX, startY] = point(start);
         const [endX, endY] = point(end);
         const largeArc = fraction > 0.5 ? 1 : 0;
@@ -621,7 +619,7 @@ function defaultNotifySubject(company) {
   return `${company.name} is hiring${company.role ? ` — ${company.role}` : ''}`;
 }
 
-function DocumentsModal({ student, documents, onClose, onView }) {
+function DocumentsModal({ student, documents, onClose }) {
   return (
     <div style={styles.modalOverlay} onClick={onClose}>
       <div style={styles.modalCard} onClick={(e) => e.stopPropagation()}>
@@ -1677,15 +1675,6 @@ export default function Admin() {
     } catch (err) {
       console.error('Error updating verification status:', err);
       showToast(err.message || 'Failed to update verification');
-    }
-  }
-
-  function handleViewDocument(doc) {
-    // Build a valid URL for documents stored on the backend.
-    const url = documentUrl(doc.url || doc.filePath || doc.filepath);
-    showToast(`Opening ${doc.name || 'document'}…`);
-    if (url && url !== '#') {
-      window.open(url, '_blank', 'noopener,noreferrer');
     }
   }
 
@@ -2980,7 +2969,6 @@ export default function Admin() {
           student={docsFor.student}
           documents={docsFor.documents}
           onClose={() => setDocsFor(null)}
-          onView={handleViewDocument}
         />
       )}
 

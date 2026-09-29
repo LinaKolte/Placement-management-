@@ -20,6 +20,7 @@ const {
   sendEligibilityEmails,
   notifyStudents,
   deleteApplication,
+  withdrawApplication,
 } = require("../controllers/applicationController");
 
 // Student Apply
@@ -28,6 +29,7 @@ router.post("/", applyForCompany);
 // Admin View
 router.get("/", getAllApplications);
 router.delete("/:id", authenticate, allowRoles('admin'), deleteApplication);
+router.put("/:id/withdraw", authenticate, allowRoles('student'), withdrawApplication);
 router.get("/analytics", authenticate, allowRoles('admin'), getPlacementAnalytics);
 router.get("/selected-students/download", downloadSelectedStudents);
 router.get("/company-applications/download", downloadSelectedStudents);

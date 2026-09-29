@@ -36,7 +36,7 @@ const uploadFileToStorage = async (file, documentType) => {
 
   const safeName = `${Date.now()}_${(file.originalname || "document").replace(/[^a-zA-Z0-9_.-]/g, "_")}`;
 
-  if (process.env.BLOB_READ_WRITE_TOKEN) {
+  if (process.env.NODE_ENV === "production" && process.env.BLOB_READ_WRITE_TOKEN) {
     const blob = await put(`student-portal/${documentType || "misc"}/${safeName}`, file.buffer, {
       access: "public",
       contentType: file.mimetype || "application/octet-stream",

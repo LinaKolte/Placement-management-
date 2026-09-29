@@ -294,6 +294,28 @@ exports.deleteApplication = async (req, res) => {
   }
 };
 
+exports.withdrawApplication = async (req, res) => {
+  try {
+    const student = await Student.findById(req.user.id).select('rollNumber');
+    if (!student?.rollNumber) return res.status(404).json({ message: 'Student account not found' });
+
+    const application = await Application.findById(req.params.id);
+    if (!application) return res.status(404).json({ message: 'Application not found' });
+    if (application.studentId !== student.rollNumber) {
+      return res.status(403).json({ message: 'You can only withdraw your own applications' });
+    }
+    if (!['Applied', 'Shortlisted', 'Interview Scheduled'].includes(application.status)) {
+      return res.status(400).json({ message: 'This application can no longer be withdrawn' });
+    }
+
+    application.status = 'Withdrawn';
+    await application.save();
+    return res.json({ message: 'Application withdrawn successfully', application });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
 exports.getPlacementAnalytics = async (req, res) => {
   try {
     const [total, placed, selected, shortlisted, rejected, byCompany] = await Promise.all([
